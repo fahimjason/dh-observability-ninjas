@@ -1,0 +1,28 @@
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { MongooseInstrumentation } from '@opentelemetry/instrumentation-mongoose';
+import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
+
+
+function tracer(serviceName: string): void {
+    const traceExporter = new OTLPTraceExporter({
+        url: process.env.JAEGER_URI! as string, // Assuming JAEGER_URI is of type string
+    });
+
+    const sdk = new NodeSDK({
+        traceExporter,
+        serviceName: serviceName,
+        instrumentations: [
+            new ExpressInstrumentation(),
+            new MongooseInstrumentation(),
+            new MongoDBInstrumentation({
+                enhancedDatabaseReporting: true
+            }),
+        ],
+    });
+
+    sdk.start();
+}
+
+export = tracer;
