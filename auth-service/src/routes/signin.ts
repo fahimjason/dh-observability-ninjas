@@ -6,11 +6,14 @@ import { BadRequestError } from '../errors/bad-request-error';
 import { User } from '../models/user-sequelize';
 import { validateRequest } from '../middlewares/validate-request';
 import { Password } from '../services/password';
+import { createTracer } from '../middlewares/custom-tracer';
+import { createSpan, tracingError, getActiveParentSpan } from '../middlewares/custom-tracer';
 
 const router = express.Router();
 
 router.post(
     '/api/users/signin',
+    createTracer('/user-signin'),
     [
         body('email')
             .isEmail()
@@ -22,6 +25,9 @@ router.post(
     ],
     validateRequest,
     async (req: Request, res: Response) => {
+        const span = getActiveParentSpan();
+        console.log(span);
+
         const { email, password } = req.body;
 
         const existingUser = await User.findOne({
@@ -30,7 +36,10 @@ router.post(
             }
         });
 
+        const childSpan = createSpan('db-call-and-token-creation', span);
+
         if (!existingUser) {
+            tracingError(childSpan, 'Invalid credentials');
             throw new BadRequestError('Invalid credentials');
         }
 
@@ -52,6 +61,8 @@ router.post(
             process.env.JWT_KEY!
         );
 
+        childSpan.end();
+
         // Store it on session object
         req.session = {
             jwt: userJwt,
@@ -61,6 +72,8 @@ router.post(
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
             httpOnly: true
         }).send({...rest, token: userJwt});
+
+        span?.end();
     }
 );
 

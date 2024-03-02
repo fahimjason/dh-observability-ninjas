@@ -14,7 +14,7 @@ const helmet = require('helmet');
 const xss = require('xss-clean');
 
 // tracer
-const { trace, context, propagation } = require('@opentelemetry/api');
+
 const tracer = require('./tracer');
 tracer('auth-service');
 
@@ -32,6 +32,8 @@ const jobRouter = require('./routes/jobs');
 // error handler
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
+const { createTracer } = require('./middleware/custom-tracer');
+const { getAllPosts } = require('./controllers/jobs');
 
 app.set('trust proxy', 1);
 
@@ -64,26 +66,28 @@ app.get('/', (req, res) => {
 });
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
-app.get('/validate-user', async (req, res) => {
-    const ctx = propagation.extract(context.active(), req.headers);
+// app.get('/validate-user', async (req, res) => {
+//     const ctx = propagation.extract(context.active(), req.headers);
 
-    const tracer = trace.getTracer('init-tracer');
-    // console.log('auth-service', req.headers);
-    // console.log('Extract span from context', trace.getSpan(ctx).spanContext());
+//     const tracer = trace.getTracer('init-tracer');
+//     // console.log('auth-service', req.headers);
+//     // console.log('Extract span from context', trace.getSpan(ctx).spanContext());
 
-    const span = tracer.startSpan(
-        'validate-user',
-        {
-            attributes: {'http.url': req.url}
-        },
-        ctx
-    );
-    res.json({success: true});
-    span.end();
-});
+//     const span = tracer.startSpan(
+//         'validate-user',
+//         {
+//             attributes: {'http.url': req.url}
+//         },
+//         ctx
+//     );
+//     res.json({success: true});
+//     span.end();
+// });
+
+app.get('/get-posts', createTracer('/get-posts'), getAllPosts);
 
 app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/jobs', authenticateUser, jobRouter);
+app.use('/api/v1/jobs', jobRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

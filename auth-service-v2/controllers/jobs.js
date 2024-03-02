@@ -1,15 +1,56 @@
 const mongoose = require('mongoose');
 const moment = require('moment');
+const axios =  require('axios');
+const { trace, context, propagation } = require('@opentelemetry/api');
 
 const { StatusCodes } = require('http-status-codes');
 const { NotFoundError } = require('../errors/not-found');
+
 const Job = require('../models/Job');
+
+const getAllPosts = async (req, res) => {
+    const parentSpan = trace.getSpan(context.active());
+
+    try{
+        const user = req.user;
+        // {
+        //     id: 1,
+        //     name: 'user',
+        //     email: 'user@mail.com'
+        // };
+
+        if(parentSpan && req.user) {
+            parentSpan.setAttribute('user.id', user);
+        }
+
+        const validateResponse = await context.with(
+            trace.setSpan(context.active(), parentSpan),
+            async() => {
+                const carrier = {};
+                propagation.inject(context.active(), carrier); 
+                parentSpan.end();
+                return axios.get('http://localhost:5009/posts', {
+                    headers: carrier
+                });
+            }
+        );
+
+        res.json(validateResponse.data);
+    } catch(e) {
+        console.log("Error:", e.message)
+        if(parentSpan) {
+            // console.log(parentSpan)
+            parentSpan.recordException(e)
+        }
+        return;
+    }
+};
 
 const getAllJobs = async (req, res) => {
     const { search, status, jobType, sort } = req.query;
 
     const queryObject = {
-        createdBy: req.user.userId,
+        createdBy: req?.user?.userId,
     };
 
     if (search) {
@@ -166,5 +207,6 @@ module.exports = {
     createJob,
     updateJob,
     deleteJob,
-    showStats
+    showStats,
+    getAllPosts
 };

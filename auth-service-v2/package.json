@@ -17,6 +17,7 @@
         "@opentelemetry/instrumentation-mongodb": "^0.39.0",
         "@opentelemetry/instrumentation-mongoose": "^0.35.0",
         "@opentelemetry/sdk-node": "^0.48.0",
+        "axios": "^1.6.7",
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",

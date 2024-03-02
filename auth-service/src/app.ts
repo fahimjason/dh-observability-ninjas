@@ -13,6 +13,9 @@ import { teamsMembersRouter } from './routes/team-members';
 import { errorHandler } from './middlewares/error-handler';
 import { NotFoundError } from './errors/not-found-error';
 
+import tracer from '../tracer';
+tracer('auth-service');
+
 const app = express();
 app.set('trust proxy', true);
 app.use(express.json());

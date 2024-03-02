@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-mysql-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-mysql
+  template:
+    metadata:
+      labels:
+        app: auth-mysql
+    spec:
+      containers:
+        - name: auth-mysql
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: your_mysql_root_password
+            - name: MYSQL_DATABASE
+              value: your_database_name
+            - name: MYSQL_USER
+              value: your_mysql_username
+            - name: MYSQL_PASSWORD
+              value: your_mysql_password
+          ports:
+            - containerPort: 3306
+---
+# ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-mysql-srv
+spec:
+  selector:
+    app: auth-mysql
+  ports:
+    - name: db
+      protocol: TCP
+      port: 3306
+      targetPort: 3306

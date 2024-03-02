@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/user-sequelize';
 import { validateRequest } from '../middlewares/validate-request';
 import { BadRequestError } from '../errors/bad-request-error';
+// import { createTracer } from '../middlewares/custom-tracer';
 
 const router = express.Router();
 

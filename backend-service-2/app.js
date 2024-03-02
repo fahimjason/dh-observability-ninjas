@@ -17,7 +17,7 @@ const xss = require('xss-clean');
 // tracer
 const { trace, context, propagation } = require('@opentelemetry/api');
 const tracer = require('./tracer');
-tracer('jobs-service');
+tracer('backend-service-2');
 
 const express = require('express');
 const app = express();
@@ -26,6 +26,10 @@ const app = express();
 const connectDB = require('./db/connect');
 const authenticateUser = require('./middleware/authentication');
 
+const { getPosts } = require('./controllers/jobs');
+
+app.get('/posts', getPosts);
+
 // routers
 const authRouter = require('./routes/auth');
 const jobRouter = require('./routes/jobs');
@@ -33,7 +37,6 @@ const jobRouter = require('./routes/jobs');
 // error handler
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
-const { validate } = require('./models/User');
 
 app.set('trust proxy', 1);
 
@@ -77,47 +80,47 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 //     });
 // });
 
-app.get('/get-user', async (req, res) => {
-    const parentSpan = trace.getSpan(context.active());
+// app.get('/get-user', async (req, res) => {
+//     const parentSpan = trace.getSpan(context.active());
 
-    try{
-        const user = {
-            id: 1,
-            name: 'user',
-            email: 'user@mail.com'
-        };
+//     try{
+//         const user = {
+//             id: 1,
+//             name: 'user',
+//             email: 'user@mail.com'
+//         };
 
-        if(parentSpan) {
-            parentSpan.setAttributes(user);
-        }
+//         if(parentSpan) {
+//             parentSpan.setAttributes(user);
+//         }
 
-        const validateResponse = await context.with(
-            trace.setSpan(context.active(), parentSpan),
-            async() => {
-                const carrier = {};
-                propagation.inject(context.active(), carrier); 
-                parentSpan.end();
-                return axios.get('http://localhost:5000/validate-user', {
-                    headers: carrier
-                });
-            }
-        );
+//         const validateResponse = await context.with(
+//             trace.setSpan(context.active(), parentSpan),
+//             async() => {
+//                 const carrier = {};
+//                 propagation.inject(context.active(), carrier); 
+//                 parentSpan.end();
+//                 return axios.get('http://localhost:5000/validate-user', {
+//                     headers: carrier
+//                 });
+//             }
+//         );
 
         
 
-        console.log('job-service', validateResponse.data); 
+//         console.log('job-service', validateResponse.data); 
 
-        // res.send(user).json();
-        res.json(user);
-    } catch(e) {
-        console.log("Error:", e.message)
-        if(parentSpan) {
-            // console.log(parentSpan)
-            parentSpan.recordException(e)
-        }
-        return;
-    }
-});
+//         // res.send(user).json();
+//         res.json(user);
+//     } catch(e) {
+//         console.log("Error:", e.message)
+//         if(parentSpan) {
+//             // console.log(parentSpan)
+//             parentSpan.recordException(e)
+//         }
+//         return;
+//     }
+// });
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/jobs', authenticateUser, jobRouter);
@@ -125,7 +128,7 @@ app.use('/api/v1/jobs', authenticateUser, jobRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5009;
 
 const start = async () => {
     try {

@@ -8,7 +8,8 @@ const {
     createJob,
     updateJob,
     deleteJob,
-    showStats
+    showStats,
+    getAllPosts
 } = require('../controllers/jobs');
 
 router.route('/').post(createJob).get(getAllJobs);

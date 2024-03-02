@@ -1,8 +1,9 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
-import { MongooseInstrumentation } from '@opentelemetry/instrumentation-mongoose';
+// import { MongooseInstrumentation } from '@opentelemetry/instrumentation-mongoose';
 import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
+import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
 
 
 function tracer(serviceName: string): void {
@@ -15,7 +16,10 @@ function tracer(serviceName: string): void {
         serviceName: serviceName,
         instrumentations: [
             new ExpressInstrumentation(),
-            new MongooseInstrumentation(),
+            // new MongooseInstrumentation(),
+            new PgInstrumentation({
+                enhancedDatabaseReporting: true
+            }),
             new MongoDBInstrumentation({
                 enhancedDatabaseReporting: true
             }),
