@@ -8,6 +8,15 @@ const { trace, context, propagation } = require('@opentelemetry/api');
 
 const { createSpan, tracingError, getActiveParentSpan, createTracer } = require('../middleware/custom-tracer');
 
+// redisClient.js
+const redis = require('redis');
+
+// Connect to Redis server
+const client = redis.createClient({
+  url: 'redis://localhost:6379' // Default Redis URL
+});
+client.connect();
+
 const getPosts = async (req, res) => {
     const ctx = propagation.extract(context.active(), req.headers);
 
