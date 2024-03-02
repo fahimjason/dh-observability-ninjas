@@ -29,7 +29,7 @@ const getAllPosts = async (req, res) => {
                 const carrier = {};
                 propagation.inject(context.active(), carrier); 
                 parentSpan.end();
-                return axios.get('http://localhost:5009/posts', {
+                return axios.get(process.env.BACKEND_SERVICE_2, {
                     headers: carrier
                 });
             }
@@ -99,6 +99,8 @@ const getAllJobs = async (req, res) => {
 
 const getJob = async (req, res) => {
     const { user: { userId }, params: { id: jobId } } = req;
+
+    const parentSpan = trace.getSpan(context.active()); 
 
     const job = await Job.findOne({
         _id: jobId,
