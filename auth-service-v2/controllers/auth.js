@@ -4,10 +4,14 @@ const User = require('../models/User');
 
 // tracing
 const { createSpan, tracingError, getActiveParentSpan } = require('../middleware/custom-tracer');
+    const register = async (req, res) => {
 
-const register = async (req, res) => {
+    const span = getActiveParentSpan();
+
+        const childSpan = createSpan('db-call-and-token-creation', span);
         const user = await User.create({ ...req.body });
         const token = user.createJWT();
+        childSpan.end();
 
         res.status(StatusCodes.CREATED).json({
             user: {
@@ -18,6 +22,14 @@ const register = async (req, res) => {
                 token,
             },
         });
+
+        payload = {
+            'user.email': req.body.email,
+            'url': req.url
+        }
+
+    span.setAttributes(payload);
+    span.end();
 };
 
 const login = async (req, res) => {
